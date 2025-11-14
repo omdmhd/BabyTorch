@@ -1,15 +1,16 @@
+import numpy as np
 from .base import BaseLayer
-import torch
+from nn.tensor import Tensor
 
 class LinearLayer(BaseLayer):
     def __init__(self, in_features: int, out_features: int):
         self.in_features = in_features
         self.out_features = out_features
-        self.weights = torch.randn(in_features, out_features, requires_grad=True)
-        self.bias = torch.randn(out_features, requires_grad=True)
+        self.weights = Tensor(np.random.randn(in_features, out_features))
+        self.bias = Tensor(np.random.randn(out_features))
 
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: Tensor) -> Tensor:
         return x @ self.weights + self.bias
 
-    def backward(self, x: torch.Tensor) -> torch.Tensor:
-        return x @ self.weights.T
+    def _parameters(self) -> list[Tensor]:
+        return [self.weights, self.bias]

@@ -34,6 +34,31 @@ class Tensor:
         out._backward = _backward
         return out
 
+    def __sub__(self, other):
+        out = Tensor(self.data - other.data)
+        out.children.append(self)
+        out.children.append(other)
+        def _backward():
+            self.grad += out.grad
+            other.grad += out.grad
+        out._backward = _backward
+        return out
+
+    def __truediv__(self, other):
+        return self * other ** -1
+
+    def __pow__(self, other):
+        if isinstance(other, int) or isinstance(other, float):
+            other = Tensor(np.array([other]))
+        out = Tensor(self.data ** other.data)
+        out.children.append(self)
+        out.children.append(other)
+        def _backward():
+            self.grad += other.data * self.data ** (other.data -1) * out.grad
+            other.grad += self.data ** other.data * np.log(self.data) * out.grad
+        out._backward = _backward
+        return out
+
     def exp(self):
         out = Tensor(np.exp(self.data))
         out.children.append(self)
@@ -76,11 +101,41 @@ class Tensor:
         out._backward = _backward
         return out
 
-    # def __matmul__(self, other):
-    #     return Tensor(self.data @ other.data)
+    def __matmul__(self, other):
+        out = Tensor(self.data @ other.data)
+        out.children.append(self)
+        out.children.append(other)
+        def _backward():
+            print(other.data.T.shape, out.grad.shape)
+            self.grad += out.grad @other.data.T 
+            other.grad += self.data.T @ out.grad
+        out._backward = _backward
+        return out
+
+    def sum(self):
+        out = Tensor(np.array([self.data.sum()]))
+        out.children.append(self)
+        def _backward():
+            self.grad += out.grad * np.ones_like(self.data)
+        out._backward = _backward
+        return out
+
+    def mean(self):
+        out = Tensor(np.array([self.data.mean()]))
+        out.children.append(self)
+        def _backward():
+            self.grad += out.grad * np.ones_like(self.data) / self.data.size
+        out._backward = _backward
+        return out
 
     def backward(self):
         self.grad = 1.0
+        self.run_backward_recursively()
+
+    def run_backward_recursively(self):
         self._backward()
         for child in self.children:
-            child._backward()
+            child.run_backward_recursively()
+
+    def T(self):
+        return Tensor(self.data.T)

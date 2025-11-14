@@ -3,7 +3,7 @@ import numpy as np
 class Module:
 
     def __init__(self):
-        self.parameters = []
+        self._parameters = []
 
     def __call__(self, *args, **kwargs):
         # Pre-processing, hooks, etc.
@@ -17,4 +17,4 @@ class Module:
         raise NotImplementedError
 
     def parameters(self) -> list[np.ndarray]:
-        return self.parameters
+        return self._parameters
