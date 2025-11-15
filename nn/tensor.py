@@ -128,6 +128,9 @@ class Tensor:
         out._backward = _backward
         return out
 
+    def sqrt(self):
+        return self.__pow__(-0.5)
+
     def backward(self):
         self.grad = 1.0
         self.run_backward_recursively()
